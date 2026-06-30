@@ -183,15 +183,57 @@ def render_dashboard(proyecto_seleccionado):
                 st.warning("No hay tareas marcadas como 'completed' para mostrar el gráfico de eficiencia.")
 
             st.write("---")
+            # --- Implementación Mapa de Calor de Productividad (GitHub Style) ---
+            st.subheader("Mapa de Calor de Intensidad Horaria")
+
             df_trends['Hora'] = df_trends['fecha_dt'].dt.hour
-            hour_counts = df_trends['Hora'].value_counts().sort_index().reset_index()
-            hour_counts.columns = ['Hora', 'Bloques']
-            fig_hour = px.line(hour_counts, x='Hora', y='Bloques', markers=True, color_discrete_sequence=['#00FFA3'], title="<b>¿A qué horas soy más productivo?</b> (Intensidad de Bloques)", template="plotly_dark")
-            fig_hour.update_layout(xaxis=dict(tickmode='linear', tick0=0, dtick=1), plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color="#CBD5E1")
-            fig_hour.add_vrect(x0=6, x1=12, fillcolor="green", opacity=0.1, annotation_text="Mañana", annotation_position="top left")
-            fig_hour.add_vrect(x0=12, x1=18, fillcolor="blue", opacity=0.1, annotation_text="Tarde", annotation_position="top left")
-            fig_hour.add_vrect(x0=18, x1=23, fillcolor="purple", opacity=0.1, annotation_text="Noche", annotation_position="top left")
-            st.plotly_chart(fig_hour, use_container_width=True)
+            # Definimos el mapa de días si no se definieron arriba debido a df_completed vacío
+            dias_map = {'Monday': 'Lunes', 'Tuesday': 'Martes', 'Wednesday': 'Miércoles', 'Thursday': 'Jueves', 'Friday': 'Viernes', 'Saturday': 'Sábado', 'Sunday': 'Domingo'}
+            dias_orden = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+            df_trends['Día'] = df_trends['fecha_dt'].dt.day_name().map(dias_map)
+
+            # Crear matriz de volumen: Filas = Días, Columnas = Horas (Suma de real_hours)
+            heatmap_data = df_trends.groupby(['Día', 'Hora'])['real_hours'].sum().unstack(fill_value=0)
+            heatmap_data = heatmap_data.reindex(dias_orden).fillna(0)
+
+            # Asegurar que todas las horas (0-23) estén presentes
+            for h in range(24):
+                if h not in heatmap_data.columns:
+                    heatmap_data[h] = 0
+            heatmap_data = heatmap_data.sort_index(axis=1)
+
+            fig_heatmap = px.imshow(
+                heatmap_data,
+                labels=dict(x="Hora del Día", y="Día de la Semana", color="Horas"),
+                x=heatmap_data.columns,
+                y=heatmap_data.index,
+                color_continuous_scale=[[0, '#1E293B'], [0.5, '#065F46'], [1, '#00FFA3']],
+                title="<b>Mapa de Calor de Productividad</b> (Volumen de Enfoque por Hora)",
+                template="plotly_dark"
+            )
+
+            # Crear el efecto de celdas separadas (estilo GitHub) mediante gaps
+            fig_heatmap.update_traces(xgap=3, ygap=3)
+
+            fig_heatmap.update_layout(
+                xaxis=dict(
+                    tickmode='linear',
+                    tick0=0,
+                    dtick=2,
+                    showgrid=False
+                ),
+                yaxis=dict(
+                    showgrid=False
+                ),
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font_color="#CBD5E1",
+                xaxis_title="Hora (0-23h)",
+                yaxis_title=""
+            )
+
+            st.plotly_chart(fig_heatmap, use_container_width=True)
+            st.caption("💡 Las celdas más brillantes indican el mayor volumen de tiempo enfocado (Suma de horas reales).")
 
     with tab_historial:
         st.subheader("Registro de Bloques de Trabajo")

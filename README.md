@@ -57,3 +57,6 @@ El desarrollo está dividido en sprints técnicos para asegurar la escalabilidad
 - **Ingesta de Datos**: Cualquier importación de CSV debe seguir estrictamente el `DATA_SCHEMA.md`.
 - **Colores de Interfaz**: Uso de paleta Dark Mode con acentos en Verde Neón (`#00FFA3`) para acciones positivas y Rojo (`#FF4B4B`) para detenciones.
 - **Sincronización**: El cronómetro de enfoque debe alimentar automáticamente la duración de las tareas registradas.
+- **Visualización de Datos**: 
+  - El análisis de eficiencia diaria debe utilizar un código de colores basado en la dificultad promedio: Verde Oscuro (Baja) -> Verde Neón (Media) -> Ambar Eléctrico (Alta).
+  - El Mapa de Calor de Productividad (Hourly Heatmap) debe representar el **Volumen de Enfoque** (suma de `real_hours`) con una escala de color: Azul Pizarra (`#1E293B`) -> Verde Bosque (`#065F46`) -> Verde Neón (`#00FFA3`), utilizando celdas separadas (gaps) para un acabado profesional.
