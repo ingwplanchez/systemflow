@@ -60,3 +60,10 @@ El desarrollo está dividido en sprints técnicos para asegurar la escalabilidad
 - **Visualización de Datos**: 
   - El análisis de eficiencia diaria debe utilizar un código de colores basado en la dificultad promedio: Verde Oscuro (Baja) -> Verde Neón (Media) -> Ambar Eléctrico (Alta).
   - El Mapa de Calor de Productividad (Hourly Heatmap) debe representar el **Volumen de Enfoque** (suma de `real_hours`) con una escala de color: Azul Pizarra (`#1E293B`) -> Verde Bosque (`#065F46`) -> Verde Neón (`#00FFA3`), utilizando celdas separadas (gaps) para un acabado profesional.
+- **Lógica de Indicadores (KPIs)**:
+  - **Focus Score**: Cálculo basado en la precisión de estimación (Diferencia entre `est_hours` y `real_hours`).
+  - **Ciclos Completados**: Conteo de tareas `completed` del día actual frente a una meta configurable en el Sidebar.
+  - **Tiempo Total**: Suma de `real_hours` del proyecto, con indicador de progreso diario.
+  - **Eficiencia Promedio**: Ratio de rendimiento ($\frac{\sum \text{est\_hours}}{\sum \text{real\_hours}}$) capado al 120%.
+- **Configuraciones de Usuario**:
+  - **Meta Diaria**: Control ajustable en la interfaz para definir el objetivo de bloques diarios (predeterminado: 4 bloques/estilo Pomodoro).

@@ -49,6 +49,17 @@ def render_sidebar():
                 st.success("✅ Sesión guardada automáticamente.")
                 st.rerun()
 
+        # Control de Meta Diaria
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+        st.session_state['daily_goal'] = st.number_input(
+            "🎯 Meta Diaria de Bloques:",
+            min_value=1,
+            max_value=20,
+            value=st.session_state.get('daily_goal', 4),
+            step=1
+        )
+        st.caption("Sugerencia: 4 bloques (Técnica Pomodoro)")
+
         st.divider()
 
         st.subheader("📁 Gestión de Proyectos")
@@ -126,15 +137,30 @@ def render_dashboard(proyecto_seleccionado):
     ciclos_hoy = len(df_today)
     meta_diaria = st.session_state.get('daily_goal', 6)
 
+    # 3. Tiempo Total Enfocado (Contextualizado)
+    total_horas = df_filtrado['real_hours'].sum()
+    # Sumamos horas de hoy independientemente de si están 'completed' (para ver progreso actual)
+    horas_hoy = df_filtrado[df_filtrado['timestamp'].str.startswith(today_str)]['real_hours'].sum()
+
+    # 4. Eficiencia Promedio (Rendimiento Real vs Estimado)
+    if not df_completed.empty:
+        suma_est = df_completed['est_hours'].sum()
+        suma_real = df_completed['real_hours'].sum()
+        # Si suma_real es 0, la eficiencia es 0 para evitar división por cero
+        eficiencia = (suma_est / suma_real * 100) if suma_real > 0 else 0
+        eficiencia = min(120, eficiencia) # Capamos en 120% para evitar valores absurdos en el UI
+    else:
+        eficiencia = 0
+
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(label="Puntuación de Enfoque", value=f"{focus_score} / 100", delta="+5% esta semana")
     with col2:
         st.metric(label="Ciclos Completados (Hoy)", value=f"{ciclos_hoy} / {meta_diaria}", delta=f"Meta: {meta_diaria}")
     with col3:
-        st.metric(label="Tiempo Total Enfocado", value=f"{df_filtrado['real_hours'].sum():.1f} hrs", delta=None)
+        st.metric(label="Tiempo Total Enfocado", value=f"{total_horas:.1f} hrs", delta=f"Hoy: {horas_hoy:.1f} h")
     with col4:
-        st.metric(label="Eficiencia Promedio", value="92%", delta="+2% vs mes anterior")
+        st.metric(label="Eficiencia Promedio", value=f"{int(eficiencia)}%", delta="+2% vs mes anterior")
 
     st.write("---")
 
