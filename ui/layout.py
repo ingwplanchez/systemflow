@@ -137,9 +137,17 @@ def render_dashboard(proyecto_seleccionado):
                 df_completed['Día'] = df_completed['fecha_dt'].dt.day_name().map(dias_map)
                 dias_orden = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
-                # Lógica de Color por Dificultad
+                # Lógica de Volumen y Color por Dificultad
+                # Usamos dt.weekday (0=Lunes, 6=Domingo) para evitar errores de idioma/locale
+                df_completed['day_idx'] = df_completed['fecha_dt'].dt.weekday
+                dias_orden = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+
+                # Mapeamos el índice numérico al nombre en español
+                df_completed['Día'] = df_completed['day_idx'].map(lambda x: dias_orden[int(x)])
+
                 day_stats = df_completed.groupby('Día').agg(
-                    ciclos=('task_id', 'count'),
+                    bloques=('task_id', 'count'),
+                    horas_totales=('real_hours', 'sum'),
                     dificultad_avg=('difficulty', 'mean')
                 ).reindex(dias_orden).fillna(0).reset_index()
 
@@ -149,17 +157,38 @@ def render_dashboard(proyecto_seleccionado):
                     return '#FACC15' # Ambar Eléctrico para alta dificultad
 
                 day_stats['color'] = day_stats['dificultad_avg'].apply(assign_color)
+                # Crear etiqueta combinada: "N bloq. (X.X hrs)"
+                day_stats['label_texto'] = day_stats.apply(
+                    lambda row: f"{int(row['bloques'])} bloq. ({row['horas_totales']:.1f}h)" if row['bloques'] > 0 else "",
+                    axis=1
+                )
+
+                # Calcular el límite del eje X para evitar que las etiquetas se corten
+                max_bloques = day_stats['bloques'].max()
+                x_limit = max_bloques + 1 if max_bloques > 0 else 1
 
                 fig_day = px.bar(
                     day_stats,
-                    x='ciclos',
+                    x='bloques',
                     y='Día',
                     orientation='h',
                     color='color',
+                    text='label_texto',
                     color_discrete_map='identity',
-                    title="<b>¿En qué día soy más eficiente?</b> (Ciclos vs Intensidad)",
+                    title="<b>Volumen de Trabajo por Día y Nivel de Dificultad</b>",
                     template="plotly_dark",
-                    labels={'ciclos': 'Ciclos Completados', 'Día': ''}
+                    labels={
+                        'bloques': 'Bloques',
+                        'horas_totales': 'Tiempo Total',
+                        'dificultad_avg': 'Dificultad',
+                        'Día': 'Día'
+                    },
+                    hover_data={
+                        'bloques': True,
+                        'horas_totales': ':.1f',
+                        'dificultad_avg': ':.1f',
+                        'label_texto': False # Ocultamos el texto redundante del hover
+                    }
                 )
                 fig_day.update_layout(
                     yaxis=dict(
@@ -168,17 +197,21 @@ def render_dashboard(proyecto_seleccionado):
                         categoryarray=dias_orden
                     ),
                     xaxis=dict(
+                        range=[0, x_limit], # Forzamos un espacio extra al final
                         tickmode='linear',
                         tick0=0,
-                        dtick=1
+                        dtick=1,
+                        showticklabels=False
                     ),
+                    margin=dict(r=120, l=20, t=50, b=50), # Aumentamos ligeramente el margen derecho
                     plot_bgcolor='rgba(0,0,0,0)',
                     paper_bgcolor='rgba(0,0,0,0)',
                     font_color="#CBD5E1",
                     showlegend=False
                 )
+                fig_day.update_traces(textposition='outside')
                 st.plotly_chart(fig_day, use_container_width=True)
-                st.caption("💡 El color de la barra indica la dificultad promedio de las tareas: Verde Oscuro (Baja) → Verde Neón (Media) → Ambar Eléctrico (Alta)")
+                st.caption("💡 El color indica la dificultad promedio y el texto la cantidad de bloques con su tiempo total.")
             else:
                 st.warning("No hay tareas marcadas como 'completed' para mostrar el gráfico de eficiencia.")
 
