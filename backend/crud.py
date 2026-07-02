@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime
+from typing import Optional, List
 from . import models, schemas
 
 # ---------- Project CRUD ----------
@@ -25,12 +26,32 @@ def create_project(db: Session, project: schemas.ProjectCreate):
 # ---------- Task CRUD ----------
 
 def get_tasks(db: Session, project_id: Optional[int] = None, status: Optional[str] = None):
-    query = db.query(models.Task)
+    query = db.query(models.Task, models.Project.name.label("project_name")).join(models.Project)
     if project_id:
         query = query.filter(models.Task.project_id == project_id)
     if status:
         query = query.filter(models.Task.status == status)
-    return query.all()
+
+    results = query.all()
+    tasks_list = []
+    for task, project_name in results:
+        # We manually build the dict to avoid SQLAlchemy internal state
+        task_dict = {
+            "id": task.id,
+            "timestamp": task.timestamp,
+            "task_id": task.task_id,
+            "project_id": task.project_id,
+            "project": project_name,
+            "category": task.category.value if hasattr(task.category, 'value') else task.category,
+            "priority": task.priority.value if hasattr(task.priority, 'value') else task.priority,
+            "est_hours": task.est_hours,
+            "real_hours": task.real_hours,
+            "difficulty": task.difficulty,
+            "status": task.status.value if hasattr(task.status, 'value') else task.status,
+            "module_task": task.module_task
+        }
+        tasks_list.append(task_dict)
+    return tasks_list
 
 def create_task(db: Session, task: schemas.TaskCreate):
     db_task = models.Task(**task.model_dump())

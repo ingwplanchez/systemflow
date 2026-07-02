@@ -22,43 +22,54 @@ def render_sidebar():
         st.markdown("### ⏱️ Control de Enfoque")
         if not st.session_state['session_active']:
             if st.button("🚀 Iniciar Sesión de Enfoque", use_container_width=True, type="primary"):
-                st.session_state['session_active'] = True
-                st.session_state['session_start_time'] = datetime.datetime.now()
-                st.rerun()
+                # Obtener ID del proyecto seleccionado (excluyendo la opción "Todos los Proyectos")
+                proj_name = st.session_state.get('proyecto_seleccionado', "Ultra Enfoque")
+                if proj_name == "Todos los Proyectos":
+                    proj_name = "Ultra Enfoque" # Default fallback
+
+                # Buscar el ID del proyecto en la lista de proyectos de la API
+                projs = api.get_projects()
+                proj_id = next((p['id'] for p in projs if p['name'] == proj_name), 1)
+
+                res = api.start_focus_session(proj_id)
+                if res:
+                    st.session_state['session_active'] = True
+                    st.session_state['session_start_time'] = datetime.datetime.fromisoformat(res['started_at'].replace('Z', '+00:00'))
+                    st.session_state['active_session_id'] = res['id']
+                    st.rerun()
         else:
             elapsed = datetime.datetime.now() - st.session_state['session_start_time']
             st.info(f"⏳ Sesión activa: {elapsed.total_seconds() // 60:.0f} min")
             if st.button("🛑 Finalizar Sesión", use_container_width=True, type="secondary"):
-                real_h = elapsed.total_seconds() / 3600
-                proyecto_actual = st.session_state.get('proyecto_seleccionado', st.session_state['proyectos'][1])
-
-                nueva_fila = {
-                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-                    "task_id": f"SESS-{datetime.datetime.now().strftime('%Y%m%d%H%M')}",
-                    "project": proyecto_actual,
-                    "module_task": "Sesión de Enfoque Automática",
-                    "category": "deep_work",
-                    "priority": "medium",
-                    "est_hours": real_h,
-                    "real_hours": real_h,
-                    "difficulty": 3,
-                    "status": "completed"
-                }
-                st.session_state['df_tareas'] = pd.concat([st.session_state['df_tareas'], pd.DataFrame([nueva_fila])], ignore_index=True)
-                st.session_state['session_active'] = False
-                st.session_state['session_start_time'] = None
-                st.success("✅ Sesión guardada automáticamente.")
-                st.rerun()
+                session_id = st.session_state.get('active_session_id')
+                if session_id:
+                    res = api.stop_focus_session(session_id)
+                    if res:
+                        st.session_state['session_active'] = False
+                        st.session_state['session_start_time'] = None
+                        st.session_state['active_session_id'] = None
+                        # Refrescar cache de tareas
+                        st.session_state['df_tareas'] = pd.DataFrame(api.get_tasks())
+                        st.success("✅ Sesión guardada automáticamente.")
+                        st.rerun()
 
         # Control de Meta Diaria
         st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-        st.session_state['daily_goal'] = st.number_input(
+
+        # Usamos un valor temporal para el input y actualizamos la API al cambiar
+        current_goal = st.session_state.get('daily_goal', 4)
+        new_goal = st.number_input(
             "🎯 Meta Diaria de Bloques:",
             min_value=1,
             max_value=20,
-            value=st.session_state.get('daily_goal', 4),
+            value=current_goal,
             step=1
         )
+        if new_goal != current_goal:
+            api.update_settings(new_goal)
+            st.session_state['daily_goal'] = new_goal
+            st.rerun()
+
         st.caption("Sugerencia: 4 bloques (Técnica Pomodoro)")
 
         st.divider()
@@ -66,10 +77,14 @@ def render_sidebar():
         st.subheader("📁 Gestión de Proyectos")
         nuevo_proyecto = st.text_input("Nombre del nuevo proyecto:", placeholder="Ej: Proyecto Gamma")
         if st.button("➕ Crear Proyecto", use_container_width=True, type="primary"):
-            if nuevo_proyecto and nuevo_proyecto not in st.session_state['proyectos']:
-                st.session_state['proyectos'].append(nuevo_proyecto)
-                st.success(f"Proyecto '{nuevo_proyecto}' creado.")
-                st.rerun()
+            if nuevo_proyecto:
+                res = api.create_project(nuevo_proyecto)
+                if res:
+                    # Actualizar lista local de proyectos
+                    projs_api = api.get_projects()
+                    st.session_state['proyectos'] = ["Todos los Proyectos"] + [p['name'] for p in projs_api]
+                    st.success(f"Proyecto '{nuevo_proyecto}' creado.")
+                    st.rerun()
 
         st.divider()
         proyecto_sel = st.selectbox("Filtrar Dashboard por:", st.session_state['proyectos'])
@@ -78,31 +93,43 @@ def render_sidebar():
 
         st.subheader("📝 Registrar Nueva Tarea")
         with st.form("form_tarea", clear_on_submit=True):
-            proj_asociado = st.selectbox("Asociar al proyecto:", [p for p in st.session_state['proyectos'] if p != "Todos los Proyectos"])
+            # Filtrar proyectos para el selectbox (sin el sentinel)
+            projs_api = api.get_projects()
+            proj_names = [p['name'] for p in projs_api]
+            proj_asociado_name = st.selectbox("Asociar al proyecto:", proj_names)
+
             task_id_input = st.text_input("Identificador / Tarea:", placeholder="Ej: T-004")
             module_task_input = st.text_input("Módulo / Descripción de Tarea:", placeholder="Ej: Refactorización Backend")
-            categoria = st.selectbox("Categoría:", [" deep_work ", " collaboration ", " strategy ", " reactive "])
-            prioridad = st.selectbox("Prioridad:", [" High ", " Medium ", " Low ", " Critical "])
+            categoria = st.selectbox("Categoría:", ["deep_work", "collaboration", "strategy", "reactive"])
+            prioridad = st.selectbox("Prioridad:", ["critical", "high", "medium", "low"])
             est_h = st.number_input("Horas Estimadas:", min_value=0.0, value=1.0, step=0.5)
             real_h = st.number_input("Horas Reales (Duración):", min_value=0.0, value=0.75, step=0.25)
             dificultad = st.slider("Dificultad (1-5):", 1, 5, 3)
-            estado_t = st.selectbox("Estado:", [" Completed ", " Interrupted ", " In Progress "])
+            estado_t = st.selectbox("Estado:", ["completed", "in_progress", "pending"])
 
             submitted = st.form_submit_button("Registrar Bloque")
             if submitted:
-                if st.session_state['session_active']:
-                    elapsed = datetime.datetime.now() - st.session_state['session_start_time']
-                    real_h_final = elapsed.total_seconds() / 3600
-                    st.session_state['session_active'] = False
-                    st.session_state['session_start_time'] = None
-                    st.toast(f"⏱️ Tiempo de sesión aplicado: {real_h_final:.2f} hrs")
-                else:
-                    real_h_final = real_h
+                # Buscar el ID del proyecto seleccionado
+                proj_id = next((p['id'] for p in projs_api if p['name'] == proj_asociado_name), 1)
 
-                nueva_fila = {
-                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                real_h_final = real_h
+                if st.session_state['session_active']:
+                    # Si hay sesión activa, la cerramos y usamos su tiempo
+                    session_id = st.session_state.get('active_session_id')
+                    if session_id:
+                        res_stop = api.stop_focus_session(session_id)
+                        if res_stop:
+                            real_h_final = res_stop['real_hours']
+                            st.session_state['session_active'] = False
+                            st.session_state['session_start_time'] = None
+                            st.session_state['active_session_id'] = None
+                            st.toast(f"⏱️ Tiempo de sesión aplicado: {real_h_final:.2f} hrs")
+
+                # Preparar payload para API
+                task_payload = {
+                    "timestamp": datetime.datetime.now().isoformat(),
                     "task_id": task_id_input,
-                    "project": proj_asociado,
+                    "project_id": proj_id,
                     "module_task": module_task_input,
                     "category": categoria,
                     "priority": prioridad,
@@ -111,9 +138,12 @@ def render_sidebar():
                     "difficulty": dificultad,
                     "status": estado_t
                 }
-                st.session_state['df_tareas'] = pd.concat([st.session_state['df_tareas'], pd.DataFrame([nueva_fila])], ignore_index=True)
-                st.toast("✅ Tarea registrada con éxito.")
-                st.rerun()
+
+                if api.create_task(task_payload):
+                    # Refrescar cache de tareas
+                    st.session_state['df_tareas'] = pd.DataFrame(api.get_tasks())
+                    st.toast("✅ Tarea registrada con éxito.")
+                    st.rerun()
 
     return proyecto_sel
 

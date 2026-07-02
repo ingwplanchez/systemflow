@@ -36,21 +36,22 @@ systemflow/
 └── requirements.txt    # Dependencias del proyecto
 ```
 
-## 🚀 Ejecución Local
-Para ejecutar la aplicación en modo desarrollo:
+## 🚀 Ejecución Local (IMPORTANTE)
 
-1. **Instalar dependencias**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. **Lanzar el Backend (API)**:
-   ```bash
-   uvicorn backend.main:app --reload
-   ```
-3. **Lanzar el Dashboard**:
-   ```bash
-   streamlit run app.py
-   ```
+Debido a la arquitectura desacoplada, **debes ejecutar el Backend y el Frontend simultáneamente en dos terminales separadas**.
+
+### Paso 1: Lanzar el Backend (API)
+Abre una terminal y ejecuta:
+```bash
+uvicorn backend.main:app --reload
+```
+*El servidor debe quedar corriendo en `http://localhost:8000`. No cierres esta terminal.*
+
+### Paso 2: Lanzar el Dashboard (Frontend)
+Abre una **segunda terminal** y ejecuta:
+```bash
+streamlit run app.py
+```
 
 ## 📅 Hoja de Ruta (Roadmap)
 El desarrollo está dividido en sprints técnicos para asegurar la escalabilidad:
