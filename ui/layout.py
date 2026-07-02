@@ -4,6 +4,7 @@ import datetime
 import io
 import plotly.express as px
 from core.etl import procesar_datos_etl
+from core.api_client import api
 
 def render_sidebar():
     with st.sidebar:

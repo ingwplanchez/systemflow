@@ -4,7 +4,7 @@
 
 ## 🛠️ Stack Tecnológico
 - **Frontend:** Streamlit para la visualización de datos y el dashboard interactivo.
-- **Backend:** FastAPI (Python) para la gestión de APIs y persistencia de datos (en desarrollo).
+- **Backend:** FastAPI (Python) para la gestión de APIs y persistencia de datos.
 - **Data Science:** Pandas y Plotly para el procesamiento, limpieza y análisis de tendencias.
 - **Base de Datos:** SQLite para despliegue local sencillo.
 
@@ -15,12 +15,23 @@ La aplicación sigue una arquitectura modular basada en la separación de respon
 systemflow/
 ├── app.py              # Punto de entrada principal de la aplicación
 ├── core/               # Lógica de negocio y procesamiento de datos
-│   ├── state.py        # Gestión del estado de la sesión (st.session_state)
-│   └── etl.py          # Pipeline de limpieza y normalización de datos (Esquema ETL)
+│   ├── state.py        # Gestión del estado de la sesión (Transicionando a API)
+│   ├── etl.py          # Pipeline de limpieza y normalización de datos (Esquema ETL)
+│   └── api_client.py   # Cliente singleton para comunicación con el Backend
 ├── ui/                 # Diseño y presentación de la interfaz
 │   ├── styles.py       # Definiciones de CSS y estilos visuales
 │   └── layout.py       # Estructura de la página, sidebar y componentes del dashboard
-├── backend/            # API REST y persistencia de datos (Sprints futuros)
+├── backend/            # API REST y persistencia de datos
+│   ├── main.py         # Punto de entrada de FastAPI y CORS
+│   ├── database.py     # Configuración de SQLAlchemy y sesión de DB
+│   ├── models.py       # Modelos ORM (Project, Task, FocusSession, UserSettings)
+│   ├── schemas.py      # Modelos de validación Pydantic
+│   ├── crud.py         # Lógica de acceso a datos (Create, Read, Update, Delete)
+│   └── api/            # Definiciones de rutas por entidad
+│       ├── projects.py # Endpoints de gestión de proyectos
+│       ├── tasks.py    # Endpoints de gestión de tareas
+│       ├── focus.py    # Ciclo de vida de sesiones de enfoque
+│       └── settings.py # Gestión de preferencias de usuario
 ├── data_analysis/      # Motor de cálculo de métricas y Focus Score (Sprints futuros)
 └── requirements.txt    # Dependencias del proyecto
 ```
@@ -32,7 +43,11 @@ Para ejecutar la aplicación en modo desarrollo:
    ```bash
    pip install -r requirements.txt
    ```
-2. **Lanzar el Dashboard**:
+2. **Lanzar el Backend (API)**:
+   ```bash
+   uvicorn backend.main:app --reload
+   ```
+3. **Lanzar el Dashboard**:
    ```bash
    streamlit run app.py
    ```
@@ -40,10 +55,12 @@ Para ejecutar la aplicación en modo desarrollo:
 ## 📅 Hoja de Ruta (Roadmap)
 El desarrollo está dividido en sprints técnicos para asegurar la escalabilidad:
 
-### Sprint 1: Backend & Persistencia
-- Implementación de FastAPI para reemplazar el almacenamiento en memoria.
-- Definición de modelos de datos (Proyectos, Tareas) con SQLAlchemy.
-- Creación de endpoints CRUD para el registro persistente de sesiones.
+### Sprint 1: Backend & Persistencia (En Progreso)
+- [x] Implementación de FastAPI y estructura modular.
+- [x] Definición de modelos de datos con SQLAlchemy (Sincronizados con `DATA_SCHEMA.md`).
+- [x] Creación de endpoints CRUD para Proyectos, Tareas y Preferencias.
+- [x] Lógica de ciclo de vida de Sesiones de Enfoque (Backend-owned).
+- [ ] Integración total del frontend con la API mediante `APIClient`.
 
 ### Sprint 2: Lógica de Análisis
 - Desarrollo del motor de cálculo de la "Puntuación de Enfoque" (*Focus Score*).
