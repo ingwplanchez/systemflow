@@ -72,6 +72,30 @@ def update_task(db: Session, task_id: int, updates: schemas.TaskUpdate):
         db.refresh(db_task)
     return db_task
 
+def delete_task(db: Session, task_id: int):
+    db_task = db.query(models.Task).filter(models.Task.id == task_id).first()
+    if db_task:
+        db.delete(db_task)
+        db.commit()
+        return True
+    return False
+
+def delete_all_tasks(db: Session):
+    db.query(models.Task).delete()
+    db.commit()
+    return True
+
+def create_tasks_bulk(db: Session, tasks_data: List[schemas.TaskCreate]):
+    created_tasks = []
+    for task_in in tasks_data:
+        db_task = models.Task(**task_in.model_dump())
+        db.add(db_task)
+        created_tasks.append(db_task)
+    db.commit()
+    for task in created_tasks:
+        db.refresh(task)
+    return created_tasks
+
 # ---------- Focus Session CRUD ----------
 
 def create_focus_session(db: Session, session_data: schemas.FocusSessionCreate):

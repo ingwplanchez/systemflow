@@ -113,3 +113,6 @@ class KPIResponse(BaseModel):
     total_horas: float
     horas_hoy: float
     eficiencia: int
+
+class TaskBulkCreate(BaseModel):
+    tasks: List[TaskCreate]
