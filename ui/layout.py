@@ -225,6 +225,15 @@ def render_dashboard(proyecto_seleccionado):
                     dificultad_avg=('difficulty', 'mean')
                 ).reindex(dias_orden).fillna(0).reset_index()
 
+                # --- Insights de Rendimiento Semanal ---
+                if not day_stats.empty:
+                    dia_max_horas = day_stats.loc[day_stats['horas_totales'].idxmax()]
+                    dia_max_diff = day_stats.loc[day_stats['dificultad_avg'].idxmax()]
+
+                    insight_msg = f"🌟 **Día de mayor enfoque:** {dia_max_horas['Día']} con {dia_max_horas['horas_totales']:.1f}h | " \
+                                  f"🧠 **Mayor carga mental:** {dia_max_diff['Día']} (Dificultad: {dia_max_diff['dificultad_avg']:.1f})"
+                    st.success(insight_msg)
+
                 def assign_color(val):
                     if val <= 2: return '#1B4332' # Verde oscuro
                     if val <= 3.5: return '#00FFA3' # Verde Neón

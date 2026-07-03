@@ -91,6 +91,8 @@ El desarrollo está dividido en sprints técnicos para asegurar la escalabilidad
             - **Detección de Bloques Pico**: Identifica y resalta el rango horario continuo de máxima productividad basándose en la intensidad acumulada.
             - **Escalado Dinámico**: Ajusta automáticamente la barra de colores al valor máximo real y normaliza los ticks según la métrica (enteros para tareas, decimales para horas/carga).
             - **Estética Profesional**: Utiliza una escala de color Azul Pizarra (`#1E293B`) $\rightarrow$ Verde Bosque (`#065F46`) $\rightarrow$ Verde Neón (`#00FFA3`) con celdas separadas (gaps).
+        - El gráfico de Volumen de Trabajo por Día incluye **Insights de Rendimiento** automáticos para identificar el día de mayor enfoque y carga mental.
+        - **Mejoras Pendientes**: Implementación de ordenamiento dinámico (por volumen/dificultad) y sincronización visual avanzada de paletas entre gráficas.
 
 - **Exportación de Datos**: Cualquier exportación de CSV debe seguir estrictamente el `DATA_SCHEMA.md`.
     - Formato de Fecha: ISO 8601 (`YYYY-MM-DD HH:MM:SS`).
