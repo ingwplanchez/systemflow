@@ -15,7 +15,7 @@ La aplicación sigue una arquitectura modular basada en la separación de respon
 systemflow/
 ├── app.py              # Punto de entrada principal de la aplicación
 ├── core/               # Lógica de negocio y procesamiento de datos
-│   ├── state.py        # Gestión del estado de la sesión (Transicionando a API)
+│   ├── state.py        # Gestión del estado de la sesión
 │   ├── etl.py          # Pipeline de limpieza y normalización de datos (Esquema ETL)
 │   └── api_client.py   # Cliente singleton para comunicación con el Backend
 ├── ui/                 # Diseño y presentación de la interfaz
@@ -29,7 +29,7 @@ systemflow/
 │   ├── crud.py         # Lógica de acceso a datos (Create, Read, Update, Delete)
 │   └── api/            # Definiciones de rutas por entidad
 │       ├── projects.py # Endpoints de gestión de proyectos
-│       ├── tasks.py    # Endpoints de gestión de tareas
+│       ├── tasks.py    # Endpoints de gestión de tareas (incluye Bulk Load y Delete)
 │       ├── focus.py    # Ciclo de vida de sesiones de enfoque
 │       └── settings.py # Gestión de preferencias de usuario
 ├── data_analysis/      # Motor de cálculo de métricas y Focus Score (Sprints futuros)
@@ -56,32 +56,35 @@ streamlit run app.py
 ## 📅 Hoja de Ruta (Roadmap)
 El desarrollo está dividido en sprints técnicos para asegurar la escalabilidad:
 
-### Sprint 1: Backend & Persistencia (En Progreso)
+### Sprint 1: Backend & Persistencia (Completado ✅)
 - [x] Implementación de FastAPI y estructura modular.
 - [x] Definición de modelos de datos con SQLAlchemy (Sincronizados con `DATA_SCHEMA.md`).
 - [x] Creación de endpoints CRUD para Proyectos, Tareas y Preferencias.
-- [x] Lógica de ciclo de vida de Sesiones de Enfoque (Backend-owned).
-- [ ] Integración total del frontend con la API mediante `APIClient`.
+- [x] Lógica de ciclo de vida de Sesiones de Enfoque (Backend-owned) con recuperación de sesión.
+- [x] Integración total del frontend con la API mediante `APIClient`.
+- [x] Optimización de latencia (eliminación de redirecciones HTTP 307).
+- [x] Herramientas de mantenimiento: Eliminación de tareas y Carga Masiva (Bulk Load) vía API.
 
-### Sprint 2: Lógica de Análisis
-- Desarrollo del motor de cálculo de la "Puntuación de Enfoque" (*Focus Score*).
+### Sprint 2: Lógica de Análisis (Próximo)
+- Desarrollo del motor de cálculo de la "Puntuación de Enfoque" (*Focus Score*) avanzado.
 - Agregaciones temporales avanzadas para detección de picos de productividad.
 
 ### Sprint 3: Integración Final
-- Conexión total del frontend con la API mediante clientes HTTP.
-- Implementación de visualizaciones avanzadas del Focus Score.
+- Conexión total del frontend con la API para visualizaciones avanzadas del Focus Score.
+- Refinamiento de la UX basada en datos analíticos.
 
 ## 🛠️ Especificaciones Técnicas Obligatorias
-- **Ingesta de Datos**: Cualquier importación de CSV debe seguir estrictamente el `DATA_SCHEMA.md`.
+- **Ingesta de Datos**: Cualquier importación de CSV o carga masiva debe seguir estrictamente el `DATA_SCHEMA.md`.
+    - Formato de Fecha: ISO 8601 (`YYYY-MM-DD HH:MM:SS`).
 - **Colores de Interfaz**: Uso de paleta Dark Mode con acentos en Verde Neón (`#00FFA3`) para acciones positivas y Rojo (`#FF4B4B`) para detenciones.
-- **Sincronización**: El cronómetro de enfoque debe alimentar automáticamente la duración de las tareas registradas.
+- **Sincronización**: El cronómetro de enfoque alimenta automáticamente la duración de las tareas registradas.
 - **Visualización de Datos**: 
-  - El análisis de eficiencia diaria debe utilizar un código de colores basado en la dificultad promedio: Verde Oscuro (Baja) -> Verde Neón (Media) -> Ambar Eléctrico (Alta).
-  - El Mapa de Calor de Productividad (Hourly Heatmap) debe representar el **Volumen de Enfoque** (suma de `real_hours`) con una escala de color: Azul Pizarra (`#1E293B`) -> Verde Bosque (`#065F46`) -> Verde Neón (`#00FFA3`), utilizando celdas separadas (gaps) para un acabado profesional.
+    - El análisis de eficiencia diaria utiliza un código de colores basado en la dificultad promedio: Verde Oscuro (Baja) $\rightarrow$ Verde Neón (Media) $\rightarrow$ Ambar Eléctrico (Alta).
+    - El Mapa de Calor de Productividad representa el **Volumen de Enfoque** (suma de `real_hours`) con una escala de color: Azul Pizarra (`#1E293B`) $\rightarrow$ Verde Bosque (`#065F46`) $\rightarrow$ Verde Neón (`#00FFA3`), utilizando celdas separadas (gaps) para un acabado profesional.
 - **Lógica de Indicadores (KPIs)**:
-  - **Focus Score**: Cálculo basado en la precisión de estimación (Diferencia entre `est_hours` y `real_hours`).
-  - **Ciclos Completados**: Conteo de tareas `completed` del día actual frente a una meta configurable en el Sidebar.
-  - **Tiempo Total**: Suma de `real_hours` del proyecto, con indicador de progreso diario.
-  - **Eficiencia Promedio**: Ratio de rendimiento ($\frac{\sum \text{est\_hours}}{\sum \text{real\_hours}}$) capado al 120%.
+    - **Focus Score**: Cálculo basado en la precisión de estimación (Diferencia entre `est_hours` y `real_hours`).
+    - **Ciclos Completados**: Conteo de tareas `completed` del día actual frente a una meta configurable en el Sidebar.
+    - **Tiempo Total**: Suma de `real_hours` del proyecto, con indicador de progreso diario.
+    - **Eficiencia Promedio**: Ratio de rendimiento ($\frac{\sum \text{est\_hours}}{\sum \text{real\_hours}}$) capado al 120%.
 - **Configuraciones de Usuario**:
-  - **Meta Diaria**: Control ajustable en la interfaz para definir el objetivo de bloques diarios (predeterminado: 4 bloques/estilo Pomodoro).
+    - **Meta Diaria**: Control ajustable en la interfaz para definir el objetivo de bloques diarios (predeterminado: 4 bloques).
