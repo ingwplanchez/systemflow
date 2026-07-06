@@ -36,6 +36,7 @@ def render_sidebar():
                     st.session_state['session_active'] = True
                     st.session_state['session_start_time'] = datetime.datetime.fromisoformat(res['started_at'].replace('Z', '+00:00'))
                     st.session_state['active_session_id'] = res['id']
+                    st.session_state['app_mode'] = 'focus'
                     st.rerun()
         else:
             elapsed = datetime.datetime.now() - st.session_state['session_start_time']
@@ -48,6 +49,7 @@ def render_sidebar():
                         st.session_state['session_active'] = False
                         st.session_state['session_start_time'] = None
                         st.session_state['active_session_id'] = None
+                        st.session_state['app_mode'] = 'analysis'
                         # Refrescar cache de tareas
                         st.session_state['df_tareas'] = pd.DataFrame(api.get_tasks())
                         st.success("✅ Sesión guardada automáticamente.")
@@ -123,6 +125,7 @@ def render_sidebar():
                             st.session_state['session_active'] = False
                             st.session_state['session_start_time'] = None
                             st.session_state['active_session_id'] = None
+                            st.session_state['app_mode'] = 'analysis'
                             st.toast(f"⏱️ Tiempo de sesión aplicado: {real_h_final:.2f} hrs")
 
                 # Preparar payload para API

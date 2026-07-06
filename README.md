@@ -98,5 +98,6 @@ El desarrollo está dividido en sprints técnicos para asegurar la escalabilidad
     - Formato de Fecha: ISO 8601 (`YYYY-MM-DD HH:MM:SS`).
 - **Colores de Interfaz**: Uso de paleta Dark Mode con acentos en Verde Neón (`#00FFA3`) para acciones positivas y Rojo (`#FF4B4B`) para detenciones.
 - **Sincronización**: El cronómetro de enfoque alimenta automáticamente la duración de las tareas registradas.
+- **Optimización de Rendimiento**: Implementación de "Modo Análisis" para desactivar el polling de sesiones activas cuando no hay un ciclo de enfoque en curso, reduciendo la latencia de la interfaz y el tráfico innecesario al servidor.
 
 

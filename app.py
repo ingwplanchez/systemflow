@@ -25,16 +25,18 @@ def sync_with_backend(force=False):
     """Sincroniza el estado de Streamlit con los datos persistentes del Backend."""
     # Evitamos resincronizar todo en cada rerun a menos que sea forzado o la primera vez
     if not force and st.session_state.get('initialized', False):
-        # Aún así, recuperamos la sesión activa para mantener el timer vivo
-        active_session = api.get_active_session()
-        if active_session:
-            st.session_state['session_active'] = True
-            st.session_state['session_start_time'] = datetime.fromisoformat(active_session['started_at'].replace('Z', '+00:00'))
-            st.session_state['active_session_id'] = active_session['id']
-        else:
-            st.session_state['session_active'] = False
-            st.session_state['session_start_time'] = None
-            st.session_state['active_session_id'] = None
+        # Solo recuperamos la sesión activa si estamos en modo 'focus' para evitar lags en modo análisis
+        if st.session_state.get('app_mode') == 'focus':
+            active_session = api.get_active_session()
+            if active_session:
+                st.session_state['session_active'] = True
+                st.session_state['session_start_time'] = datetime.fromisoformat(active_session['started_at'].replace('Z', '+00:00'))
+                st.session_state['active_session_id'] = active_session['id']
+            else:
+                st.session_state['session_active'] = False
+                st.session_state['session_start_time'] = None
+                st.session_state['active_session_id'] = None
+                st.session_state['app_mode'] = 'analysis' # Volver a análisis si la sesión desapareció
         return
 
     try:
@@ -57,10 +59,12 @@ def sync_with_backend(force=False):
             st.session_state['session_active'] = True
             st.session_state['session_start_time'] = datetime.fromisoformat(active_session['started_at'].replace('Z', '+00:00'))
             st.session_state['active_session_id'] = active_session['id']
+            st.session_state['app_mode'] = 'focus'
         else:
             st.session_state['session_active'] = False
             st.session_state['session_start_time'] = None
             st.session_state['active_session_id'] = None
+            st.session_state['app_mode'] = 'analysis'
 
         # 4. Cargar Tareas Iniciales
         tasks_api = api.get_tasks()
