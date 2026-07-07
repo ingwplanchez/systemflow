@@ -67,7 +67,7 @@ streamlit run app.py
 | **Motor de exportación de datos** | Motor de exportación de datos en formato CSV para análisis externos   . | ![Motor de exportación de datos](docs/screenshots/export_data.png) |
 | **Sesión de Enfoque** | Control de tiempo y registro de sesiones de trabajo. Ajuste de metas diarias en el Sidebar. | ![Sesión de Enfoque](docs/screenshots/focus_session.png) |
 | **Gestión de Proyectos** | Creacion y seleccion de proyectos. | ![Gestión de Proyectos](docs/screenshots/projects.png) |
-| **Gestión de Tareas** | Creacion de tareas con código y descripción. | ![Gestión de Tareas](docs/screenshots/tasks.png) |
+| **Gestión de Tareas** | Creación de tareas con código y descripción. | ![Gestión de Tareas](docs/screenshots/tasks.png) |
 | **Registro de Bloques** | Registro de Bloques de tareas por proyecto. | ![Gestión de Bloques](docs/screenshots/blocks.png) |
 
 ## 📅 Hoja de Ruta (Roadmap)
