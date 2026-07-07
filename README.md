@@ -40,14 +40,18 @@ systemflow/
 
 Debido a la arquitectura desacoplada, **debes ejecutar el Backend y el Frontend simultáneamente en dos terminales separadas**.
 
-### Paso 1: Lanzar el Backend (API)
+### Paso 1: Instalar dependencias
+```bash
+pip install -r requirements.txt
+```
+### Paso 2: Lanzar el Backend (API)
 Abre una terminal y ejecuta:
 ```bash
 uvicorn backend.main:app --reload
 ```
 *El servidor debe quedar corriendo en `http://localhost:8000`. No cierres esta terminal.*
 
-### Paso 2: Lanzar el Dashboard (Frontend)
+### Paso 3: Lanzar el Dashboard (Frontend)
 Abre una **segunda terminal** y ejecuta:
 ```bash
 streamlit run app.py
